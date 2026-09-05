@@ -1,2 +1,2 @@
-[target]
+[webserver]
 target_server ansible_host=13.233.192.117 ansible_user=ubuntu

@@ -1,16 +1,46 @@
 ---
 - name: Deploy AltoroJ Web Application
-hosts: webserver
-become: true
-tasks:
-- name: Ensure target directory exists
-  ansible.builtin.file:
-    path: /var/www/html
-    state: directory
-    mode: '0755'
+  hosts: webserver
+  become: true
+  vars:
+    tomcat_home: /opt/tomcat
+    tomcat_user: tomcat
+    tomcat_webapps: "{{ tomcat_home }}/webapps"
+  tasks:
+    - name: Ensure Tomcat is installed
+      ansible.builtin.package:
+        name: tomcat
+        state: present
 
-- name: Copy built WAR artifact to web server
-  ansible.builtin.copy:
-    src: build/libs/AltoroJ.war
-    dest: /var/www/html/AltoroJ.war
-    mode: '0644'
+    - name: Ensure Tomcat is started and enabled
+      ansible.builtin.service:
+        name: tomcat
+        state: started
+        enabled: yes
+
+    - name: Copy built WAR artifact to Tomcat webapps directory
+      ansible.builtin.copy:
+        src: build/libs/altoromutual.war
+        dest: "{{ tomcat_webapps }}/altoromutual.war"
+        mode: '0644'
+        owner: "{{ tomcat_user }}"
+        group: "{{ tomcat_user }}"
+      notify: restart tomcat
+
+    - name: Wait for application to deploy
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Verify AltoroJ is accessible
+      ansible.builtin.uri:
+        url: "http://localhost:8080/altoromutual/"
+        status_code: 200
+      register: result
+      retries: 5
+      delay: 5
+
+  handlers:
+    - name: restart tomcat
+      ansible.builtin.service:
+        name: tomcat
+        state: restarted
