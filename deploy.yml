@@ -1,0 +1,16 @@
+---
+- name: Deploy AltoroJ Web Application
+hosts: webserver
+become: true
+tasks:
+- name: Ensure target directory exists
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    mode: '0755'
+
+- name: Copy built WAR artifact to web server
+  ansible.builtin.copy:
+    src: build/libs/AltoroJ.war
+    dest: /var/www/html/AltoroJ.war
+    mode: '0644'
