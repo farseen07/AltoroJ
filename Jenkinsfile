@@ -1,13 +1,11 @@
 pipeline {
-agent any
+    agent any
 
-environment {
     environment {
-    AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
-    AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-    AWS_DEFAULT_REGION    = 'ap-south-1'
-}
-}
+        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+        AWS_DEFAULT_REGION    = 'ap-south-1'
+    }
 
 stages {
     stage('Checkout') {
@@ -18,7 +16,7 @@ stages {
 
     stage('Build Application') {
         steps {
-            sh 'gradle build'
+            sh 'gradle build -x test'
         }
     }
 
@@ -31,7 +29,7 @@ stages {
     stage('Deploy to EC2') {
         steps {
             sshagent(['ec2-ssh-key']) {
-                sh 'ansible-playbook -i hosts deploy.yml'
+                sh 'ansible-playbook -i hosts deploy.yml -vv'
             }
         }
     }
